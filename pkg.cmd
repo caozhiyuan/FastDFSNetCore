@@ -1,2 +1,0 @@
-dotnet nuget delete FastDFS 1.0.0 --source http://10.1.62.5:8080 --api-key ee28314c-f7fe-2550-bd77-e09eda3d0119
-dotnet nuget push -s http://10.1.62.5:8080 FastDFS\bin\Release\FastDFS.1.0.0.nupkg -k ee28314c-f7fe-2550-bd77-e09eda3d0119
