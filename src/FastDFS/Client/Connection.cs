@@ -159,7 +159,7 @@ namespace FastDFS.Client
 	        return sent;
 	    }
 
-	    private async Task CloseSocketAsync()
+        private async Task CloseSocketAsync()
 	    {
 	        try
 	        {

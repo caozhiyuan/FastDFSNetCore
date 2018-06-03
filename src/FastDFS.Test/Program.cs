@@ -35,7 +35,8 @@ namespace FastDFS.Test
                 Console.ReadKey();
 
                 sw.Start();
-                //SyncTest();
+
+                SyncTest();
 
                 sw.Stop();
 
@@ -63,7 +64,7 @@ namespace FastDFS.Test
             sw.Start();
 
             var by = GetFileBytes("testimage/1.jpg");
-            const int c = 10;
+            const int c = 100;
             CountdownEvent k = new CountdownEvent(c);
             Parallel.For(0, c, (i) =>
             {
@@ -74,7 +75,6 @@ namespace FastDFS.Test
                     {
                         Console.Write("E");
                     }
-                    Console.WriteLine(i);
                     k.Signal(1);
                 });
             });
@@ -193,7 +193,7 @@ namespace FastDFS.Test
         {
             StorageNode storageNode = FastDFSClient.GetStorageNode("group1");
 
-            var str = "M00/00/81/CgE-EFm42mCARBiqAADl7mZ3mRU647.png";
+            var str = "M00/0E/82/CgE-EFsTqKmAEHO7AADMG7XS9Fc749.jpg";
             FDFSFileInfo fileInfo = FastDFSClient.GetFileInfo(storageNode, str);
 
             Console.WriteLine("FileName:{0}", str);

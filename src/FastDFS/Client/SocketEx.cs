@@ -26,7 +26,19 @@ namespace FastDFS.Client
             return tcs.Task;
         }
 
-        public static Task<int> ReceiveExAsync(this Socket socket, byte[] buffer)
+        public static async Task<int> ReceiveExAsync(this Socket socket, byte[] buffer)
+        {
+            int size = buffer.Length;
+            int index = 0;
+            while (index < size)
+            {
+                int read = await socket.ReceiveExAsync0(buffer);
+                index += read;
+            }
+            return size;
+        }
+
+        private static Task<int> ReceiveExAsync0(this Socket socket, byte[] buffer)
         {
             var tcs = new TaskCompletionSource<int>(socket);
             socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, iar =>
