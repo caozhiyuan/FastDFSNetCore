@@ -33,6 +33,10 @@ namespace FastDFS.Client
             while (index < size)
             {
                 int read = await socket.ReceiveExAsync0(buffer);
+                if (read == 0)
+                {
+                    throw new SocketException((int) SocketError.ConnectionReset);
+                }
                 index += read;
             }
             return size;
