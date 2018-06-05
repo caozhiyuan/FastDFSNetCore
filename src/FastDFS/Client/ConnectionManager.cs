@@ -8,16 +8,9 @@ namespace FastDFS.Client
 {
     public class ConnectionManager
     {
-        // Fields
         private static List<IPEndPoint> _listTrackers = new List<IPEndPoint>();
         private static readonly Dictionary<IPEndPoint, Pool> TrackerPools = new Dictionary<IPEndPoint, Pool>();
         private static readonly ConcurrentDictionary<IPEndPoint, Pool> StorePools = new ConcurrentDictionary<IPEndPoint, Pool>();
-
-        // Methods
-        internal static Connection GetStorageConnection(IPEndPoint endPoint)
-        {
-            return StorePools.GetOrAdd(endPoint, (ep) => new Pool(ep, FDFSConfig.StorageMaxConnection)).GetConnection();
-        }
 
         internal static Task<Connection> GetStorageConnectionAsync(IPEndPoint endPoint)
         {
@@ -29,13 +22,6 @@ namespace FastDFS.Client
             int num = new Random().Next(TrackerPools.Count);
             Pool pool = TrackerPools[_listTrackers[num]];
             return pool.GetConnectionAsync();
-        }
-
-        internal static Connection GetTrackerConnection()
-        {
-            int num = new Random().Next(TrackerPools.Count);
-            Pool pool = TrackerPools[_listTrackers[num]];
-            return pool.GetConnection();
         }
 
         public static bool Initialize(List<IPEndPoint> trackers)

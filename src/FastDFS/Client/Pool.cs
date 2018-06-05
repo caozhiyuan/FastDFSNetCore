@@ -7,7 +7,6 @@ namespace FastDFS.Client
 {
     internal class Pool
     {
-        // Fields
         private readonly SemaphoreSlim _autoEvent;
         private readonly IPEndPoint _endPoint;
         private readonly Stack<Connection> _idle;
@@ -15,7 +14,6 @@ namespace FastDFS.Client
         private readonly int _maxConnection;
         private readonly object _locker = new object();
 
-        // Methods
         public Pool(IPEndPoint endPoint, int maxConnection)
         {
             this._autoEvent = new SemaphoreSlim(0);
@@ -39,25 +37,6 @@ namespace FastDFS.Client
             }
             this._autoEvent.Release();
         }
-
-        public Connection GetConnection()
-        {
-            int millisecondsTimeout = FDFSConfig.GetConnectionTimeout * 1000;
-            while (true)
-            {
-                var pooldConncetion = this.GetPooldConncetion();
-                if (pooldConncetion != null)
-                {
-                    return pooldConncetion;
-                }
-                if (!this._autoEvent.Wait(millisecondsTimeout))
-                {
-                    break;
-                }
-            }
-            throw new FDFSException("Get CanUse Connection Time Out");
-        }
-
 
         public async Task<Connection> GetConnectionAsync()
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -65,6 +66,25 @@ namespace FastDFS.Client
         {
             var tcs = new TaskCompletionSource<int>(socket);
             socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, iar =>
+            {
+                var innerTcs = (TaskCompletionSource<int>)iar.AsyncState;
+                try
+                {
+                    var sent = ((Socket)innerTcs.Task.AsyncState).EndSend(iar);
+                    innerTcs.TrySetResult(sent);
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<int> SendExAsync(this Socket socket, IList<ArraySegment<byte>> buffers)
+        {
+            var tcs = new TaskCompletionSource<int>(socket);
+            socket.BeginSend(buffers, SocketFlags.None, iar =>
             {
                 var innerTcs = (TaskCompletionSource<int>)iar.AsyncState;
                 try

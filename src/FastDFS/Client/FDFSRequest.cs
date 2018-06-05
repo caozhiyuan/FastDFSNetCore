@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -42,51 +43,6 @@ namespace FastDFS.Client
             throw new NotImplementedException();
         }
 
-        public virtual byte[] GetResponse()
-        {
-            if (this.ConnectionType == 0)
-            {
-                this._connection = ConnectionManager.GetTrackerConnection();
-            }
-            else
-            {
-                this._connection = ConnectionManager.GetStorageConnection(EndPoint);
-            }
-            try
-            {
-                this._connection.Open();
-
-                byte[] num = this._header.ToByte();
-                _connection.SendEx(num);
-                _connection.SendEx(this._body);
-
-                byte[] numArray0 = new byte[10];
-                if (_connection.ReceiveEx(numArray0) == 0)
-                {
-                    throw new FDFSException("Init Header Exeption : Cann't Read Stream");
-                }
-                var length = Util.BufferToLong(numArray0, 0);
-                var command = numArray0[8];
-                var status = numArray0[9];
-
-                var fDFSHeader = new FDFSHeader(length, command, status);
-                if (fDFSHeader.Status != 0)
-                {
-                    throw new FDFSException($"Get Response Error,Error Code:{fDFSHeader.Status}");
-                }
-                byte[] numArray = new byte[fDFSHeader.Length];
-                if (fDFSHeader.Length != (long) 0)
-                {
-                    _connection.ReceiveEx(numArray);
-                }
-                return numArray;
-            }
-            finally
-            {
-                this._connection.Close();
-            }
-        }
-
         public virtual async Task<byte[]> GetResponseAsync()
         {
             if (this.ConnectionType == 0)
@@ -102,14 +58,19 @@ namespace FastDFS.Client
                 await this._connection.OpenAsync();
 
                 byte[] num = this._header.ToByte();
-                await _connection.SendExAsync(num);
-                await _connection.SendExAsync(this._body);
+                var buffers = new List<ArraySegment<byte>>(2)
+                {
+                    new ArraySegment<byte>(num),
+                    new ArraySegment<byte>(_body)
+                };
+                await _connection.SendExAsync(buffers);
 
                 byte[] numArray0 = new byte[10];
                 if (await _connection.ReceiveExAsync(numArray0) == 0)
                 {
                     throw new FDFSException("Init Header Exeption : Cann't Read Stream");
                 }
+
                 var length = Util.BufferToLong(numArray0, 0);
                 var command = numArray0[8];
                 var status = numArray0[9];
@@ -117,7 +78,7 @@ namespace FastDFS.Client
                 var fDFSHeader = new FDFSHeader(length, command, status);
                 if (fDFSHeader.Status != 0)
                 {
-                    throw new FDFSException($"Get Response Error,Error Code:{fDFSHeader.Status}");
+                    throw new FDFSStatusException(fDFSHeader.Status, $"Get Response Error,Error Code:{fDFSHeader.Status}");
                 }
                 byte[] numArray = new byte[fDFSHeader.Length];
                 if (fDFSHeader.Length != (long) 0)

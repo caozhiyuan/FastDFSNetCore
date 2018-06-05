@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -39,28 +40,6 @@ namespace FastDFS.Client
 			this._pool.CloseConnection(this);
 		}
 
-	    internal void Open()
-		{
-			if (this._inUse)
-			{
-				throw new FDFSException("the connection is already in user");
-			}
-
-		    if (_lastUseTime != default(DateTime) && IdleTotalSeconds > FDFSConfig.ConnectionLifeTime)
-		    {
-		        CloseSocket();
-            }
-
-		    this._inUse = true;
-		    this._lastUseTime = DateTime.Now;
-
-		    if (Socket == null || !Socket.Connected)
-		    {
-		        Socket = NewSocket();
-                Socket.Connect(_endPoint);
-		    }
-		}
-
 	    internal async Task OpenAsync()
 	    {
 	        if (this._inUse)
@@ -96,56 +75,16 @@ namespace FastDFS.Client
 	        return socket;
 	    }
 
-
-	    public int SendEx(byte[] buffer)
+	    internal async Task<int> SendExAsync(IList<ArraySegment<byte>> buffers)
 	    {
 	        try
 	        {
-	            return Socket.Send(buffer, 0, (int)buffer.Length, SocketFlags.None);
-            }
-	        catch (SocketException)
-	        {
-	            CloseSocket();
-                throw;
+	            return await Socket.SendExAsync(buffers);
 	        }
-	    }
-
-	    internal int ReceiveEx(byte[] buffer)
-	    {
-	        var sent = Socket.Receive(buffer, 0, (int)buffer.Length, SocketFlags.None);
-	        if (sent == 0)
-	        {
-	            CloseSocket();
-	        }
-            return sent;
-	    }
-
-	    private void CloseSocket()
-	    {
-	        try
-	        {
-	            byte[] buffer0 = new FDFSHeader(0L, 0x52, 0).ToByte();
-	            Socket.Send(buffer0, 0, (int) buffer0.Length, SocketFlags.None);
-	            Socket.Close();
-	            Socket.Dispose();
-	        }
-	        catch
-	        {
-	            // ignored
-	        }
-	        Socket = null;
-	    }
-
-	    internal async Task<int> SendExAsync(byte[] buffer)
-	    {
-	        try
-	        {
-	            return await Socket.SendExAsync(buffer);
-            }
 	        catch (Exception)
 	        {
 	            await CloseSocketAsync();
-                throw;
+	            throw;
 	        }
 	    }
 
