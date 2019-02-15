@@ -41,7 +41,7 @@ namespace FastDFS.Client
 
 			public int Port { get; set; }
 
-            public void ParseBuffer(byte[] responseByte)
+            public void ParseBuffer(byte[] responseByte, int length)
             {
                 Span<byte> span = new Span<byte>(responseByte);
                 this.GroupName = Util.ByteToString(span.Slice(0, 16).ToArray());

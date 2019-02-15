@@ -48,12 +48,11 @@ namespace FastDFS.Client
 
         public long Crc32 { get; private set; }
 
-
-        public void ParseBuffer(byte[] responseBytes)
+        public void ParseBuffer(byte[] responseBytes, int length)
         {
             this.FileSize = Util.BufferToLong(responseBytes, 0);
-            DateTime dateTime = new DateTime(0x7b2, 1, 1);
-            this.CreateTime = dateTime.AddSeconds((double)Util.BufferToLong(responseBytes, 8));
+            DateTime dateTime = new DateTime(1970, 1, 1);
+            this.CreateTime = dateTime.AddSeconds(Util.BufferToLong(responseBytes, 8)).ToLocalTime();
             this.Crc32 = Util.BufferToLong(responseBytes, 16);
         }
     }

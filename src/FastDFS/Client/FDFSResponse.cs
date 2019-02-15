@@ -2,12 +2,12 @@
 {
     internal interface IFDFSResponse
     {
-        void ParseBuffer(byte[] responseBytes);
+        void ParseBuffer(byte[] responseBytes, int length);
     }
 
     internal class EmptyFDFSResponse: IFDFSResponse
     {
-        public void ParseBuffer(byte[] responseBytes)
+        public void ParseBuffer(byte[] responseBytes, int length)
         {
           
         }

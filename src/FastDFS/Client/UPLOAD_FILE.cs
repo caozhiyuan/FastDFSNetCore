@@ -67,11 +67,11 @@ namespace FastDFS.Client
 
             public string GroupName { get; private set; }
 
-            public void ParseBuffer(byte[] responseByte)
+            public void ParseBuffer(byte[] responseByte, int length)
             {
                 Span<byte> span = new Span<byte>(responseByte);
                 this.GroupName = Util.ByteToString(span.Slice(0, 16).ToArray());
-                this.FileName = Util.ByteToString(span.Slice(16, responseByte.Length - 16).ToArray());
+                this.FileName = Util.ByteToString(span.Slice(16, length - 16).ToArray());
             }
         }
     }

@@ -108,15 +108,16 @@ namespace FastDFS.Client
                 throw new FDFSStatusException(responseHeader.Status, $"Get Response Error, Error Code:{responseHeader.Status}");
             }
 
-            var resBuffer = ArrayPool<byte>.Shared.Rent((int) responseHeader.Length);
+            int resLen = (int) responseHeader.Length;
+            var resBuffer = ArrayPool<byte>.Shared.Rent(resLen);
             try
             {
                 if (responseHeader.Length != 0)
                 {
-                    await _connection.ReceiveExAsync(resBuffer, (int) responseHeader.Length);
+                    await _connection.ReceiveExAsync(resBuffer, resLen);
                 }
                 var response = new T();
-                response.ParseBuffer(resBuffer);
+                response.ParseBuffer(resBuffer, resLen);
                 return response;
             }
             finally

@@ -40,13 +40,13 @@ namespace FastDFS.Client
 
             public byte StorePathIndex { get; private set; }
 
-            public void ParseBuffer(byte[] responseByte)
+            public void ParseBuffer(byte[] responseByte, int length)
             {
                 Span<byte> span = new Span<byte>(responseByte);
                 this.GroupName = Util.ByteToString(span.Slice(0, 16).ToArray());
                 this.IPStr = Util.ByteToString(span.Slice(16, 15).ToArray());
                 this.Port = (int)Util.BufferToLong(responseByte, 31);
-                this.StorePathIndex = responseByte[responseByte.Length - 1];
+                this.StorePathIndex = responseByte[length - 1];
             }
         }
 	}

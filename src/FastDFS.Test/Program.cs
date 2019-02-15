@@ -200,6 +200,11 @@ namespace FastDFS.Test
                 var numArray = GetFileBytes(strArrays[0]);
                 str = await FastDFSClient.UploadFileAsync(storageNode, numArray, "jpg");
                 fileInfo = await FastDFSClient.GetFileInfoAsync(storageNode, str);
+                if (fileInfo == null)
+                {
+                    Console.WriteLine($"GetFileInfoAsync Fail, path: {str}");
+                    return;
+                }
             }
 
             Console.WriteLine("FileName:{0}", str);
