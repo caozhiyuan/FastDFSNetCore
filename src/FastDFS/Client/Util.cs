@@ -20,7 +20,7 @@ namespace FastDFS.Client
 
         public static string ByteToString(byte[] input)
         {
-            return new string(FDFSConfig.Charset.GetChars(input), 0, input.Length);
+            return new string(FDFSConfig.Charset.GetChars(input), 0, input.Length).TrimEnd('\0');
         }
 
         public static void LongToBuffer(long l, byte[] buffer, int offset)

@@ -29,24 +29,23 @@ namespace FastDFS.Client
 
         public static async Task<int> ReceiveExAsync(this Socket socket, byte[] buffer, int length)
         {
-            int size = length;
             int index = 0;
-            while (index < size)
+            while (index < length)
             {
-                int read = await socket.ReceiveExAsync0(buffer);
+                int read = await socket.ReceiveExAsync0(buffer, index, length - index);
                 if (read == 0)
                 {
                     throw new SocketException((int) SocketError.ConnectionReset);
                 }
                 index += read;
             }
-            return size;
+            return length;
         }
 
-        private static Task<int> ReceiveExAsync0(this Socket socket, byte[] buffer)
+        private static Task<int> ReceiveExAsync0(this Socket socket, byte[] buffer,int index, int size)
         {
             var tcs = new TaskCompletionSource<int>(socket);
-            socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, iar =>
+            socket.BeginReceive(buffer, index, size, SocketFlags.None, iar =>
             {
                 var innerTcs = (TaskCompletionSource<int>)iar.AsyncState;
                 try

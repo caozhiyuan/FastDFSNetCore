@@ -13,7 +13,7 @@ namespace FastDFS.Client
 
         public override FDFSRequest GetRequest(params object[] paramList)
         {
-            if (paramList.Length != 5)
+            if (paramList.Length != 3)
             {
                 throw new FDFSException("param count is wrong");
             }
