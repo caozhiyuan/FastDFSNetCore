@@ -191,14 +191,17 @@ namespace FastDFS.Test
 	    private static async Task TestGetFileInfo()
         {
             StorageNode storageNode = await FastDFSClient.GetStorageNodeAsync("group1");
-
             var str = "M00/0E/82/CgE-EFsTqKmAEHO7AADMG7XS9Fc7491.jpg";
             FDFSFileInfo fileInfo = await FastDFSClient.GetFileInfoAsync(storageNode, str);
             if (fileInfo == null)
             {
-                Console.WriteLine("Not Exist");
-                return;
+                string[] files = Directory.GetFiles("testimage", "*.jpg");
+                string[] strArrays = files;
+                var numArray = GetFileBytes(strArrays[0]);
+                str = await FastDFSClient.UploadFileAsync(storageNode, numArray, "jpg");
+                fileInfo = await FastDFSClient.GetFileInfoAsync(storageNode, str);
             }
+
             Console.WriteLine("FileName:{0}", str);
             Console.WriteLine("FileSize:{0}", fileInfo.FileSize);
             Console.WriteLine("CreateTime:{0}", fileInfo.CreateTime);

@@ -5,19 +5,12 @@ namespace FastDFS.Client
 {
     public class FastDFSClient
     {
-        public static async Task<FDFSFileInfo> GetFileInfoAsync(StorageNode storageNode, string fileName)
+        public static Task<FDFSFileInfo> GetFileInfoAsync(StorageNode storageNode, string fileName)
         {
-            try
-            {
-                return await QUERY_FILE_INFO.Instance.GetRequest(storageNode.EndPoint,
-                        storageNode.GroupName,
-                        fileName)
-                    .GetResponseAsync<FDFSFileInfo>();
-            }
-            catch (FDFSStatusException)
-            {
-                return null;
-            }
+            return QUERY_FILE_INFO.Instance.GetRequest(storageNode.EndPoint,
+                    storageNode.GroupName,
+                    fileName)
+                .GetResponseAsync<FDFSFileInfo>();
         }
 
         public static async Task<StorageNode> GetStorageNodeAsync(string groupName)

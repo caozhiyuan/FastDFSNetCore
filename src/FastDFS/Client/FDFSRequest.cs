@@ -61,9 +61,9 @@ namespace FastDFS.Client
                 };
                 await _connection.SendExAsync(buffers);
                 
-                var header = await GetResponseHeaderInfo<T>(headerBuffer);
+                var responseHeader = await GetResponseHeaderInfo<T>(headerBuffer);
 
-                return await GetResponseInfo<T>(header);
+                return await GetResponseInfo<T>(responseHeader);
             }
             finally
             {
@@ -94,22 +94,26 @@ namespace FastDFS.Client
             var length = Util.BufferToLong(headerArray, 0);
             var command = headerArray[8];
             var status = headerArray[9];
-            var header = new FDFSHeader(length, command, status);
-            if (header.Status != 0)
-            {
-                throw new FDFSStatusException(header.Status, $"Get Response Error, Error Code:{header.Status}");
-            }
-            return header;
+            return new FDFSHeader(length, command, status);
         }
 
-        private async Task<T> GetResponseInfo<T>(FDFSHeader header) where T : IFDFSResponse, new()
+        private async Task<T> GetResponseInfo<T>(FDFSHeader responseHeader) where T : IFDFSResponse, new()
         {
-            var resBuffer = ArrayPool<byte>.Shared.Rent((int) header.Length);
+            if (responseHeader.Status != 0)
+            {
+                if (Header.Command == 22) //QUERY_FILE_INFO
+                {
+                    return default(T);
+                }
+                throw new FDFSStatusException(responseHeader.Status, $"Get Response Error, Error Code:{responseHeader.Status}");
+            }
+
+            var resBuffer = ArrayPool<byte>.Shared.Rent((int) responseHeader.Length);
             try
             {
-                if (header.Length != 0)
+                if (responseHeader.Length != 0)
                 {
-                    await _connection.ReceiveExAsync(resBuffer, (int) header.Length);
+                    await _connection.ReceiveExAsync(resBuffer, (int) responseHeader.Length);
                 }
                 var response = new T();
                 response.ParseBuffer(resBuffer);
@@ -118,6 +122,7 @@ namespace FastDFS.Client
             finally
             {
                 ArrayPool<byte>.Shared.Return(resBuffer);
+                responseHeader.Dispose();
             }
         }
     }
