@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net451;netcoreapp2.1</TargetFrameworks>
-    <Version>1.1.6-beta</Version>
+    <Version>1.1.6</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>FastDFSNetCore</PackageId>
     <Description> fastdfs async client
-      1.1.6: use span reduce gc
+      1.1.6: use span arraypool reduce gc
     </Description>
     <PackageTags>fastdfs;tcp</PackageTags>
     <Authors>caozhiyuan</Authors>
