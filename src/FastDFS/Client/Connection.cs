@@ -35,7 +35,7 @@ namespace FastDFS.Client
             _endPoint = endPoint;
         }
 
-        internal void Close()
+        internal void ReUse()
         {
             this._pool.CloseConnection(this);
         }
@@ -88,9 +88,9 @@ namespace FastDFS.Client
             }
         }
 
-        internal async Task<int> ReceiveExAsync(byte[] buffer)
+        internal async Task<int> ReceiveExAsync(byte[] buffer, int length)
         {
-            var sent = await Socket.ReceiveExAsync(buffer);
+            var sent = await Socket.ReceiveExAsync(buffer, length);
             if (sent == 0)
             {
                 await CloseSocketAsync();
@@ -100,16 +100,24 @@ namespace FastDFS.Client
 
         private async Task CloseSocketAsync()
         {
+            var header = new FDFSHeader(0L, 0x52, 0);
             try
             {
-                byte[] buffer0 = new FDFSHeader(0L, 0x52, 0).ToByte();
-                await Socket.SendExAsync(buffer0);
+                var headerArray = header.GetBuffer();
+                await Socket.SendExAsync(new List<ArraySegment<byte>>
+                {
+                    headerArray
+                });
                 Socket.Close();
                 Socket.Dispose();
             }
             catch
             {
                 // ignored
+            }
+            finally
+            {
+                header.Dispose();
             }
             Socket = null;
         }

@@ -27,9 +27,9 @@ namespace FastDFS.Client
             return tcs.Task;
         }
 
-        public static async Task<int> ReceiveExAsync(this Socket socket, byte[] buffer)
+        public static async Task<int> ReceiveExAsync(this Socket socket, byte[] buffer, int length)
         {
-            int size = buffer.Length;
+            int size = length;
             int index = 0;
             while (index < size)
             {
@@ -53,25 +53,6 @@ namespace FastDFS.Client
                 {
                     var rec = ((Socket)innerTcs.Task.AsyncState).EndReceive(iar);
                     innerTcs.TrySetResult(rec);
-                }
-                catch (Exception e)
-                {
-                    innerTcs.TrySetException(e);
-                }
-            }, tcs);
-            return tcs.Task;
-        }
-
-        public static Task<int> SendExAsync(this Socket socket, byte[] buffer)
-        {
-            var tcs = new TaskCompletionSource<int>(socket);
-            socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, iar =>
-            {
-                var innerTcs = (TaskCompletionSource<int>)iar.AsyncState;
-                try
-                {
-                    var sent = ((Socket)innerTcs.Task.AsyncState).EndSend(iar);
-                    innerTcs.TrySetResult(sent);
                 }
                 catch (Exception e)
                 {

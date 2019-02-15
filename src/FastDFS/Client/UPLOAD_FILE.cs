@@ -5,10 +5,8 @@ namespace FastDFS.Client
 {
     internal class UPLOAD_FILE : FDFSRequest
     {
-        // Fields
-        private static UPLOAD_FILE _instance = null;
+        public static readonly UPLOAD_FILE Instance = new UPLOAD_FILE();
 
-        // Methods
         private UPLOAD_FILE()
         {
         }
@@ -19,69 +17,61 @@ namespace FastDFS.Client
             {
                 throw new FDFSException("param count is wrong");
             }
-            IPEndPoint endPoint = (IPEndPoint) paramList[0];
-            byte num = (byte) paramList[1];
-            int num2 = (int) paramList[2];
-            string input = (string) paramList[3];
-            byte[] sourceArray = (byte[]) paramList[4];
-            byte[] destinationArray = new byte[6];
-            byte[] buffer3 = Util.StringToByte(input);
-            int length = buffer3.Length;
-            if (length > 6)
-            {
-                length = 6;
-            }
-            Array.Copy(buffer3, 0, destinationArray, 0, length);
+
+            StorageNode storageNode = (StorageNode) paramList[0];
+            string fileExt = (string) paramList[1];
+            byte[] contentByte = (byte[]) paramList[2];
+
+            int contentByteLength = contentByte.Length;
+
             UPLOAD_FILE uploadFile = new UPLOAD_FILE
             {
-                ConnectionType = 1,
-                EndPoint = endPoint
+                ConnectionType = FDFSConnectionType.StorageConnection,
+                EndPoint = storageNode.EndPoint
             };
-            if (input.Length > 6)
+            if (fileExt.Length > 6)
             {
                 throw new FDFSException("file ext is too long");
             }
-            long num4 = 15 + sourceArray.Length;
-            byte[] buffer4 = new byte[num4];
-            buffer4[0] = num;
-            byte[] buffer5 = Util.LongToBuffer((long) num2);
-            Array.Copy(buffer5, 0, buffer4, 1, buffer5.Length);
-            Array.Copy(destinationArray, 0, buffer4, 9, destinationArray.Length);
-            Array.Copy(sourceArray, 0, buffer4, 15, sourceArray.Length);
-            uploadFile.Body = buffer4;
-            uploadFile.Header = new FDFSHeader(num4, 11, 0);
+
+            int length = 15 + contentByte.Length;
+            uploadFile.SetBodyBuffer(length);
+
+            int offset = 0;
+            uploadFile.BodyBuffer[offset++] = storageNode.StorePathIndex;
+
+            Util.LongToBuffer(contentByteLength, uploadFile.BodyBuffer, offset);
+            offset += 8;
+
+            var fileExtBuffer = Util.StringToByte(fileExt);
+            var tempLen = Math.Min(fileExtBuffer.Length, 6);
+            fileExtBuffer.Slice(0, tempLen).CopyTo(new Span<byte>(uploadFile.BodyBuffer, offset, tempLen));
+            if (tempLen < 6)
+            {
+                for (var i = offset + tempLen; i < offset + 6; i++)
+                {
+                    uploadFile.BodyBuffer[i] = 0;
+                }
+            }
+
+            offset += 6;
+            Array.Copy(contentByte, 0, uploadFile.BodyBuffer, offset, contentByte.Length);
+
+            uploadFile.Header = new FDFSHeader(length, 11, 0);
             return uploadFile;
         }
-
-        // Properties
-        public static UPLOAD_FILE Instance
+        
+        public class Response:IFDFSResponse
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new UPLOAD_FILE();
-                }
-                return _instance;
-            }
-        }
+            public string FileName { get; private set; }
 
-        // Nested Types
-        public class Response
-        {
-            // Fields
-            public string FileName;
-            public string GroupName;
+            public string GroupName { get; private set; }
 
-            // Methods
-            public Response(byte[] responseBody)
+            public void ParseBuffer(byte[] responseByte)
             {
-                byte[] destinationArray = new byte[0x10];
-                Array.Copy(responseBody, destinationArray, 0x10);
-                this.GroupName = Util.ByteToString(destinationArray).TrimEnd(new char[1]);
-                byte[] buffer2 = new byte[responseBody.Length - 0x10];
-                Array.Copy(responseBody, 0x10, buffer2, 0, buffer2.Length);
-                this.FileName = Util.ByteToString(buffer2).TrimEnd(new char[1]);
+                Span<byte> span = new Span<byte>(responseByte);
+                this.GroupName = Util.ByteToString(span.Slice(0, 16).ToArray());
+                this.FileName = Util.ByteToString(span.Slice(16, responseByte.Length - 16).ToArray());
             }
         }
     }

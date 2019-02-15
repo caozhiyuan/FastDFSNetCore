@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -7,35 +8,30 @@ namespace FastDFS.Client
 {
     internal class FDFSRequest
     {
-        private FDFSHeader _header;
+        protected enum FDFSConnectionType
+        {
+            TrackerConnection = 0,
+            StorageConnection = 1
+        }
 
-        private byte[] _body;
+        protected FDFSConnectionType ConnectionType { get; set; }
 
         private Connection _connection;
 
-        protected byte[] Body
-        {
-            get => this._body;
-            set => this._body = value;
-        }
-
-        protected Connection Connection
-        {
-            get => this._connection;
-            set => this._connection = value;
-        }
-
-        protected FDFSHeader Header
-        {
-            get => this._header;
-            set => this._header = value;
-        }
-
-        protected int ConnectionType { get; set; }
         protected IPEndPoint EndPoint { get; set; }
+
+        protected FDFSHeader Header { get; set; }
+
+        protected byte[] BodyBuffer { get; set; }
 
         protected FDFSRequest()
         {
+            ConnectionType = FDFSConnectionType.TrackerConnection;
+        }
+
+        protected void SetBodyBuffer(int length)
+        {
+            BodyBuffer = ArrayPool<byte>.Shared.Rent(length);
         }
 
         public virtual FDFSRequest GetRequest(params object[] paramList)
@@ -43,59 +39,86 @@ namespace FastDFS.Client
             throw new NotImplementedException();
         }
 
-        public virtual async Task<byte[]> GetResponseAsync()
+        public async Task<T> GetResponseAsync<T>() where T: IFDFSResponse, new ()
         {
-            if (this.ConnectionType == 0)
-            {
-                this._connection = await ConnectionManager.GetTrackerConnectionAsync();
-            }
-            else
-            {
-                this._connection = await ConnectionManager.GetStorageConnectionAsync(EndPoint);
-            }
             try
             {
-                await this._connection.OpenAsync();
+                if (ConnectionType == FDFSConnectionType.TrackerConnection)
+                {
+                    _connection = await ConnectionManager.GetTrackerConnectionAsync();
+                }
+                else
+                {
+                    _connection = await ConnectionManager.GetStorageConnectionAsync(EndPoint);
+                }
+                await _connection.OpenAsync();
 
-                byte[] num = this._header.ToByte();
+                var headerBuffer = Header.GetBuffer();
                 var buffers = new List<ArraySegment<byte>>(2)
                 {
-                    new ArraySegment<byte>(num),
-                    new ArraySegment<byte>(_body)
+                    headerBuffer,
+                    new ArraySegment<byte>(BodyBuffer, 0, (int) Header.Length)
                 };
                 await _connection.SendExAsync(buffers);
+                
+                var header = await GetResponseHeaderInfo<T>(headerBuffer);
 
-                byte[] numArray0 = new byte[10];
-                if (await _connection.ReceiveExAsync(numArray0) == 0)
-                {
-                    throw new FDFSException("Init Header Exeption : Cann't Read Stream");
-                }
-
-                var length = Util.BufferToLong(numArray0, 0);
-                var command = numArray0[8];
-                var status = numArray0[9];
-
-                var fDFSHeader = new FDFSHeader(length, command, status);
-                if (fDFSHeader.Status != 0)
-                {
-                    throw new FDFSStatusException(fDFSHeader.Status, $"Get Response Error,Error Code:{fDFSHeader.Status}");
-                }
-                byte[] numArray = new byte[fDFSHeader.Length];
-                if (fDFSHeader.Length != (long) 0)
-                {
-                    await _connection.ReceiveExAsync(numArray);
-                }
-                return numArray;
+                return await GetResponseInfo<T>(header);
             }
             finally
             {
-                this._connection.Close();
+                if (BodyBuffer != null)
+                {
+                    ArrayPool<byte>.Shared.Return(BodyBuffer);
+                }
+
+                Header?.Dispose();
+
+                _connection?.ReUse();
             }
         }
 
-        public byte[] ToByteArray()
+        private async Task<FDFSHeader> GetResponseHeaderInfo<T>(ArraySegment<byte> arraySegment) where T : IFDFSResponse, new()
         {
-            throw new NotImplementedException();
+            var headerArray = arraySegment.Array;
+            if (headerArray == null)
+            {
+                throw new ArgumentNullException(nameof(arraySegment.Array));
+            }
+
+            if (await _connection.ReceiveExAsync(headerArray, arraySegment.Count) == 0)
+            {
+                throw new FDFSException("Init Header Exception : Can't Read Stream");
+            }
+
+            var length = Util.BufferToLong(headerArray, 0);
+            var command = headerArray[8];
+            var status = headerArray[9];
+            var header = new FDFSHeader(length, command, status);
+            if (header.Status != 0)
+            {
+                throw new FDFSStatusException(header.Status, $"Get Response Error, Error Code:{header.Status}");
+            }
+            return header;
+        }
+
+        private async Task<T> GetResponseInfo<T>(FDFSHeader header) where T : IFDFSResponse, new()
+        {
+            var resBuffer = ArrayPool<byte>.Shared.Rent((int) header.Length);
+            try
+            {
+                if (header.Length != 0)
+                {
+                    await _connection.ReceiveExAsync(resBuffer, (int) header.Length);
+                }
+                var response = new T();
+                response.ParseBuffer(resBuffer);
+                return response;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(resBuffer);
+            }
         }
     }
 }

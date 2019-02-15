@@ -9,11 +9,10 @@ namespace FastDFS.Client
         {
             try
             {
-                var req = QUERY_FILE_INFO.Instance.GetRequest(storageNode.EndPoint,
-                    storageNode.GroupName,
-                    fileName);
-
-                return new FDFSFileInfo(await req.GetResponseAsync());
+                return await QUERY_FILE_INFO.Instance.GetRequest(storageNode.EndPoint,
+                        storageNode.GroupName,
+                        fileName)
+                    .GetResponseAsync<FDFSFileInfo>();
             }
             catch (FDFSStatusException)
             {
@@ -23,8 +22,9 @@ namespace FastDFS.Client
 
         public static async Task<StorageNode> GetStorageNodeAsync(string groupName)
         {
-            var responseBuffer = await QUERY_STORE_WITH_GROUP_ONE.Instance.GetRequest(groupName).GetResponseAsync();
-            var response = new QUERY_STORE_WITH_GROUP_ONE.Response(responseBuffer);
+            var response = await QUERY_STORE_WITH_GROUP_ONE.Instance.GetRequest(groupName)
+                .GetResponseAsync<QUERY_STORE_WITH_GROUP_ONE.Response>();
+
             var point = new IPEndPoint(IPAddress.Parse(response.IPStr), response.Port);
             return new StorageNode
             {
@@ -36,21 +36,22 @@ namespace FastDFS.Client
 
         public static async Task RemoveFileAsync(string groupName, string fileName)
         {
-            var buffer = await QUERY_UPDATE.Instance.GetRequest(groupName, fileName).GetResponseAsync();
-            var response = new QUERY_UPDATE.Response(buffer);
+            var response = await QUERY_UPDATE.Instance
+                .GetRequest(groupName, fileName)
+                .GetResponseAsync<QUERY_UPDATE.Response>();
+
             var point = new IPEndPoint(IPAddress.Parse(response.IPStr), response.Port);
-            await DELETE_FILE.Instance.GetRequest(point, groupName, fileName).GetResponseAsync();
+            await DELETE_FILE.Instance
+                .GetRequest(point, groupName, fileName)
+                .GetResponseAsync<EmptyFDFSResponse>();
         }
 
         public static async Task<string> UploadFileAsync(StorageNode storageNode, byte[] contentByte, string fileExt)
         {
-            var req = UPLOAD_FILE.Instance.GetRequest(
-                storageNode.EndPoint,
-                storageNode.StorePathIndex,
-                contentByte.Length,
-                fileExt,
-                contentByte);
-            var response = new UPLOAD_FILE.Response(await req.GetResponseAsync());
+            var response = await UPLOAD_FILE.Instance.GetRequest(storageNode,
+                    fileExt, 
+                    contentByte)
+                .GetResponseAsync<UPLOAD_FILE.Response>();
             return response.FileName;
         }
     }

@@ -1,14 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net451</TargetFrameworks>
-    <Version>1.1.5</Version>
+    <TargetFrameworks>netstandard2.0;net451;netcoreapp2.1</TargetFrameworks>
+    <Version>1.1.6-beta</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>FastDFSNetCore</PackageId>
-    <Description>fastdfs async client</Description>
+    <Description> fastdfs async client
+      1.1.6: use span reduce gc
+    </Description>
     <PackageTags>fastdfs;tcp</PackageTags>
     <Authors>caozhiyuan</Authors>
     <PackageProjectUrl>https://github.com/caozhiyuan/FastDFSNetCore</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/caozhiyuan/FastDFSNetCore/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicense>https://github.com/caozhiyuan/FastDFSNetCore/blob/master/LICENSE</PackageLicense>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.2" />
+  </ItemGroup>
+
 </Project>

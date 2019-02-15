@@ -48,16 +48,16 @@ namespace FastDFS.Client
                     break;
                 }
 
-                var pooldConncetion = this.GetPooldConncetion();
-                if (pooldConncetion != null)
+                var pooledConnection = this.GetPooledConnection();
+                if (pooledConnection != null)
                 {
-                    return pooldConncetion;
+                    return pooledConnection;
                 }
             }
             throw new FDFSException("Get CanUse Connection Time Out");
         }
 
-        private Connection GetPooldConncetion()
+        private Connection GetPooledConnection()
         {
             Connection item = null;
             lock (_locker)

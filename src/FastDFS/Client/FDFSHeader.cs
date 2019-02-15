@@ -1,66 +1,40 @@
 using System;
+using System.Buffers;
 
 namespace FastDFS.Client
 {
-    internal class FDFSHeader
+    internal class FDFSHeader:IDisposable
 	{
-		private long _length;
+        private byte[] _headerBuffer;
 
-		private byte _command;
+		public byte Command { get; set; }
 
-		private byte _status;
+		public long Length { get; set; }
 
-		public byte Command
+        public byte Status { get; set; }
+
+        public FDFSHeader(long length, byte command, byte status)
 		{
-			get
-			{
-				return this._command;
-			}
-			set
-			{
-				this._command = value;
-			}
-		}
+			this.Length = length;
+			this.Command = command;
+			this.Status = status;
+        }
 
-		public long Length
-		{
-			get
-			{
-				return this._length;
-			}
-			set
-			{
-				this._length = value;
-			}
-		}
+        public ArraySegment<byte> GetBuffer()
+        {
+            _headerBuffer = _headerBuffer ?? ArrayPool<byte>.Shared.Rent(10);
+            Util.LongToBuffer(this.Length, _headerBuffer, 0);        
+            _headerBuffer[8] = this.Command;
+            _headerBuffer[9] = this.Status;
+            return new ArraySegment<byte>(_headerBuffer, 0, 10);
+        }
 
-		public byte Status
-		{
-			get
-			{
-				return this._status;
-			}
-			set
-			{
-				this._status = value;
-			}
-		}
-
-		public FDFSHeader(long length, byte command, byte status)
-		{
-			this._length = length;
-			this._command = command;
-			this._status = status;
-		}
-
-		public byte[] ToByte()
-		{
-			byte[] numArray = new byte[10];
-			byte[] buffer = Util.LongToBuffer(this._length);
-			Array.Copy(buffer, 0, numArray, 0, (int)buffer.Length);
-			numArray[8] = this._command;
-			numArray[9] = this._status;
-			return numArray;
-		}
-	}
+        public void Dispose()
+        {
+            if (_headerBuffer != null)
+            {
+                ArrayPool<byte>.Shared.Return(_headerBuffer);
+            }
+        }
+    }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,13 +11,13 @@ namespace FastDFS.Test
 {
     internal class Program
     {
-        const string StorageLink = "http://10.1.62.16/group1/";
+        const string StorageLink = "http://192.168.238.128/group1/";
 
         static void Main(string[] args)
         {
             List<IPEndPoint> pEndPoints = new List<IPEndPoint>()
             {
-                new IPEndPoint(IPAddress.Parse("10.1.62.16"), 22122)
+                new IPEndPoint(IPAddress.Parse("192.168.238.128"), 22122)
             };
             ConnectionManager.Initialize(pEndPoints);
 
