@@ -25,16 +25,16 @@ namespace FastDFS.Client
                 ConnectionType = FDFSConnectionType.StorageConnection,
                 EndPoint = endPoint
             };
-            if (groupName.Length > 0x10)
+            var groupNameByteCount = Util.StringByteCount(groupName);
+            if (groupNameByteCount > 16)
             {
                 throw new FDFSException("groupName is too long");
             }
-            var fileNameArray = Util.StringToByte(fileName);
-            int length = 16 + fileNameArray.Length;
+            var fileNameByteCount = Util.StringByteCount(fileName);
+            int length = 16 + fileNameByteCount;
             deleteFile.SetBodyBuffer(length);
-            var groupNameArray = Util.StringToByte(groupName);
-            groupNameArray.CopyTo(new Span<byte>(deleteFile.BodyBuffer, 0, groupNameArray.Length));
-            fileNameArray.CopyTo(new Span<byte>(deleteFile.BodyBuffer, 16, fileNameArray.Length));
+            Util.StringToByte(groupName, deleteFile.BodyBuffer, 0, groupNameByteCount);
+            Util.StringToByte(fileName, deleteFile.BodyBuffer, 16, fileNameByteCount);
             deleteFile.Header = new FDFSHeader(length, 12, 0);
             return deleteFile;
         }

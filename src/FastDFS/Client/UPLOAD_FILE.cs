@@ -43,12 +43,11 @@ namespace FastDFS.Client
             Util.LongToBuffer(contentByteLength, uploadFile.BodyBuffer, offset);
             offset += 8;
 
-            var fileExtBuffer = Util.StringToByte(fileExt);
-            var tempLen = Math.Min(fileExtBuffer.Length, 6);
-            fileExtBuffer.Slice(0, tempLen).CopyTo(new Span<byte>(uploadFile.BodyBuffer, offset, tempLen));
-            if (tempLen < 6)
+            var fileExtByteCount = Util.StringByteCount(fileExt);
+            Util.StringToByte(fileExt, uploadFile.BodyBuffer, offset, fileExtByteCount);
+            if (fileExtByteCount < 6)
             {
-                for (var i = offset + tempLen; i < offset + 6; i++)
+                for (var i = offset + fileExtByteCount; i < offset + 6; i++)
                 {
                     uploadFile.BodyBuffer[i] = 0;
                 }
@@ -69,9 +68,8 @@ namespace FastDFS.Client
 
             public void ParseBuffer(byte[] responseByte, int length)
             {
-                Span<byte> span = new Span<byte>(responseByte);
-                this.GroupName = Util.ByteToString(span.Slice(0, 16).ToArray());
-                this.FileName = Util.ByteToString(span.Slice(16, length - 16).ToArray());
+                this.GroupName = Util.ByteToString(responseByte, 0, 16);
+                this.FileName = Util.ByteToString(responseByte, 16, length - 16);
             }
         }
     }

@@ -6,6 +6,7 @@ namespace FastDFS.Client
 {
     internal static class Util
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BufferToLong(byte[] buffer, int offset)
         {
             return (long) buffer[offset] << 56
@@ -18,11 +19,7 @@ namespace FastDFS.Client
                    | (long) buffer[offset + 7];
         }
 
-        public static string ByteToString(byte[] input)
-        {
-            return new string(FDFSConfig.Charset.GetChars(input), 0, input.Length).TrimEnd('\0');
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void LongToBuffer(long l, byte[] buffer, int offset)
         {
             buffer[offset] = (byte) ((l >> 56) & 0xffL);
@@ -34,10 +31,51 @@ namespace FastDFS.Client
             buffer[offset + 6] = (byte) ((l >> 8) & 0xffL);
             buffer[offset + 7] = (byte) (l & 0xffL);
         }
-
-        public static ReadOnlySpan<byte> StringToByte(string input)
+        
+        public static unsafe string ByteToString(byte[] input, int index, int count)
         {
-            return FDFSConfig.Charset.GetBytes(input);
+            Span<char> span = FDFSConfig.Charset.GetChars(input, index, count);
+            fixed (char* chars = &TrimEnd(span).GetPinnableReference())
+            {
+                return new string(chars);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Span<char> TrimEnd(Span<char> span)
+        {
+            int index = span.Length - 1;
+            while (index >= 0 && span[index] == '\0')
+                --index;
+            return span.Slice(0, index + 1);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int StringByteCount(string input)
+        {
+            return FDFSConfig.Charset.GetByteCount(input);
+        }
+        
+        public static unsafe void StringToByte(string input, byte[] buffer, int offset, int? inputByteCount = null)
+        {
+            if (inputByteCount == null)
+            {
+                inputByteCount = StringByteCount(input);
+                if (inputByteCount == 0)
+                {
+                    return;
+                }
+            }
+
+            var bytes = new Span<byte>(buffer, offset, inputByteCount.Value);
+            var chars = input.AsSpan();
+            fixed (char* chars1 = &MemoryMarshal.GetReference(chars))
+            {
+                fixed (byte* bytes1 = &MemoryMarshal.GetReference(bytes))
+                {
+                    FDFSConfig.Charset.GetBytes(chars1, chars.Length, bytes1, bytes.Length);
+                }
+            }
         }
     }
 }

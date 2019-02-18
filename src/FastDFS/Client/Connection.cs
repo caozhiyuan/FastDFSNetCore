@@ -95,6 +95,7 @@ namespace FastDFS.Client
             {
                 await CloseSocketAsync();
             }
+
             return sent;
         }
 
@@ -119,6 +120,7 @@ namespace FastDFS.Client
             {
                 header.Dispose();
             }
+
             Socket = null;
         }
     }

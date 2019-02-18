@@ -4,15 +4,15 @@ using System.Net;
 namespace FastDFS.Client
 {
     public class StorageNode
-	{
-		public string GroupName;
+    {
+        public string GroupName;
 
-		public IPEndPoint EndPoint;
+        public IPEndPoint EndPoint;
 
-		public byte StorePathIndex;
+        public byte StorePathIndex;
 
-		public StorageNode()
-		{
-		}
-	}
+        public StorageNode()
+        {
+        }
+    }
 }

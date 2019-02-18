@@ -17,16 +17,17 @@ namespace FastDFS.Client
 				throw new FDFSException("GroupName is null");
 			}
 			QUERY_STORE_WITH_GROUP_ONE queryStoreWithGroupOne = new QUERY_STORE_WITH_GROUP_ONE();
-			var groupNameArray = Util.StringToByte((string)paramList[0]);
-			if (groupNameArray.Length > 16)
+            var groupName = (string) paramList[0];
+            var groupNameByteCount = Util.StringByteCount(groupName);
+			if (groupNameByteCount > 16)
 			{
 				throw new FDFSException("GroupName is too long");
 			}
 
             const int length = 16;
             queryStoreWithGroupOne.SetBodyBuffer(length);
-            groupNameArray.CopyTo(new Span<byte>(queryStoreWithGroupOne.BodyBuffer, 0, groupNameArray.Length));
-			queryStoreWithGroupOne.Header = new FDFSHeader(length, 104, 0);
+            Util.StringToByte(groupName, queryStoreWithGroupOne.BodyBuffer, 0, groupNameByteCount);
+            queryStoreWithGroupOne.Header = new FDFSHeader(length, 104, 0);
 			return queryStoreWithGroupOne;
 		}
 
@@ -42,9 +43,8 @@ namespace FastDFS.Client
 
             public void ParseBuffer(byte[] responseByte, int length)
             {
-                Span<byte> span = new Span<byte>(responseByte);
-                this.GroupName = Util.ByteToString(span.Slice(0, 16).ToArray());
-                this.IPStr = Util.ByteToString(span.Slice(16, 15).ToArray());
+                this.GroupName = Util.ByteToString(responseByte, 0, 16);
+                this.IPStr = Util.ByteToString(responseByte, 16, 15);
                 this.Port = (int)Util.BufferToLong(responseByte, 31);
                 this.StorePathIndex = responseByte[length - 1];
             }
