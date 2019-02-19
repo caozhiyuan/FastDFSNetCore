@@ -101,21 +101,23 @@ namespace FastDFS.Client
         {
             if (responseHeader.Status != 0)
             {
-                if (Header.Command == 22) //QUERY_FILE_INFO
+                if (Header.Command == FDFSConstants.STORAGE_PROTO_CMD_QUERY_FILE_INFO)
                 {
                     return default(T);
                 }
-                throw new FDFSStatusException(responseHeader.Status, $"Get Response Error, Error Code:{responseHeader.Status}");
+                throw new FDFSStatusException(responseHeader.Status, $"Get Response Error, Error Code:{(FDFSConstants.ErrorCode)responseHeader.Status}");
+            }
+
+            if (responseHeader.Length <= 0)
+            {
+                return default(T);
             }
 
             int resLen = (int) responseHeader.Length;
             var resBuffer = ArrayPool<byte>.Shared.Rent(resLen);
             try
             {
-                if (responseHeader.Length != 0)
-                {
-                    await _connection.ReceiveExAsync(resBuffer, resLen);
-                }
+                await _connection.ReceiveExAsync(resBuffer, resLen);
                 var response = new T();
                 response.ParseBuffer(resBuffer, resLen);
                 return response;

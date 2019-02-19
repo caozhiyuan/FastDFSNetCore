@@ -35,7 +35,7 @@ namespace FastDFS.Client
             queryFileInfo.SetBodyBuffer(length);
             Util.StringToByte(groupName, queryFileInfo.BodyBuffer, 0, groupNameByteCount);
             Util.StringToByte(fileName, queryFileInfo.BodyBuffer, 16, fileNameByteCount);
-            queryFileInfo.Header = new FDFSHeader(length, 22, 0);
+            queryFileInfo.Header = new FDFSHeader(length, FDFSConstants.STORAGE_PROTO_CMD_QUERY_FILE_INFO, 0);
 			return queryFileInfo;
 		}
 	}

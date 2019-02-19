@@ -56,7 +56,7 @@ namespace FastDFS.Client
             offset += 6;
             Array.Copy(contentByte, 0, uploadFile.BodyBuffer, offset, contentByte.Length);
 
-            uploadFile.Header = new FDFSHeader(length, 11, 0);
+            uploadFile.Header = new FDFSHeader(length, FDFSConstants.STORAGE_PROTO_CMD_UPLOAD_FILE, 0);
             return uploadFile;
         }
         

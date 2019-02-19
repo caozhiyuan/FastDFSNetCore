@@ -101,7 +101,7 @@ namespace FastDFS.Client
 
         private async Task CloseSocketAsync()
         {
-            var header = new FDFSHeader(0L, 0x52, 0);
+            var header = new FDFSHeader(0L, FDFSConstants.FDFS_PROTO_CMD_QUIT, 0);
             try
             {
                 var headerArray = header.GetBuffer();

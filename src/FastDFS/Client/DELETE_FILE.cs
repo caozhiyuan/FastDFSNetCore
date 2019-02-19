@@ -35,7 +35,7 @@ namespace FastDFS.Client
             deleteFile.SetBodyBuffer(length);
             Util.StringToByte(groupName, deleteFile.BodyBuffer, 0, groupNameByteCount);
             Util.StringToByte(fileName, deleteFile.BodyBuffer, 16, fileNameByteCount);
-            deleteFile.Header = new FDFSHeader(length, 12, 0);
+            deleteFile.Header = new FDFSHeader(length, FDFSConstants.STORAGE_PROTO_CMD_DELETE_FILE, 0);
             return deleteFile;
         }
     }
