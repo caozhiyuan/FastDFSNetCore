@@ -7,7 +7,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>FastDFSNetCore</PackageId>
     <Description> fastdfs async client
-      1.1.8: suppoert appenderfile
+      1.1.9: support appenderfile
       1.1.7: 1. string zero memory copy 2. errorcode msg
       1.1.6: use span arraypool reduce gc
     </Description>
