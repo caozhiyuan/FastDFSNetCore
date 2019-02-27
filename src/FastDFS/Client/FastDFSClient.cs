@@ -47,5 +47,27 @@ namespace FastDFS.Client
                 .GetResponseAsync<UPLOAD_FILE.Response>();
             return response.FileName;
         }
+
+        public static async Task<string> UploadAppenderFileAsync(StorageNode storageNode, byte[] contentByte, string fileExt)
+        {
+            var response = await UPLOAD_APPEND_FILE.Instance.GetRequest(storageNode,
+                    fileExt,
+                    contentByte)
+                .GetResponseAsync<UPLOAD_APPEND_FILE.Response>();
+            return response.FileName;
+        }
+
+        public static async Task AppendFileAsync(string groupName, string fileName, byte[] contentByte)
+        {
+            var response = await QUERY_UPDATE.Instance
+                .GetRequest(groupName, fileName)
+                .GetResponseAsync<QUERY_UPDATE.Response>();
+
+            var point = new IPEndPoint(IPAddress.Parse(response.IPStr), response.Port);
+            await APPEND_FILE.Instance.GetRequest(point,
+                    fileName,
+                    contentByte)
+                .GetResponseAsync<APPEND_FILE.Response>();
+        }
     }
 }

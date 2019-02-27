@@ -34,7 +34,7 @@ namespace FastDFS.Client
                 throw new FDFSException("file ext is too long");
             }
 
-            int length = 15 + contentByte.Length;
+            int length = 15 + contentByteLength;
             uploadFile.SetBodyBuffer(length);
 
             int offset = 0;

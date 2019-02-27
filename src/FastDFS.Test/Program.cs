@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FastDFS.Client;
@@ -12,6 +15,7 @@ namespace FastDFS.Test
     internal class Program
     {
         const string StorageLink = "http://192.168.238.128/group1/";
+        private static readonly HttpClient HttpClient = new HttpClient();
 
         static void Main(string[] args)
         {
@@ -43,7 +47,7 @@ namespace FastDFS.Test
 
                 Console.ReadKey();
 
-                TestGetFileInfo().Wait();
+                UploadAppendFile().Wait();
 
                 Console.ReadKey();
 
@@ -185,34 +189,37 @@ namespace FastDFS.Test
             }
         }
 
-        /// <summary>
-        /// TestGetFileInfo
-        /// </summary>
-	    private static async Task TestGetFileInfo()
+        private static async Task UploadAppendFile()
         {
+            var testBytes = Encoding.UTF8.GetBytes("123456789");
             StorageNode storageNode = await FastDFSClient.GetStorageNodeAsync("group1");
-            var str = "M00/0E/82/CgE-EFsTqKmAEHO7AADMG7XS9Fc7491.jpg";
-            FDFSFileInfo fileInfo = await FastDFSClient.GetFileInfoAsync(storageNode, str);
+            var filename = await FastDFSClient.UploadAppenderFileAsync(storageNode, testBytes.Take(6).ToArray(), "txt");
+            FDFSFileInfo fileInfo = await FastDFSClient.GetFileInfoAsync(storageNode, filename);
             if (fileInfo == null)
             {
-                string[] files = Directory.GetFiles("testimage", "*.jpg");
-                string[] strArrays = files;
-                var numArray = GetFileBytes(strArrays[0]);
-                str = await FastDFSClient.UploadFileAsync(storageNode, numArray, "jpg");
-                fileInfo = await FastDFSClient.GetFileInfoAsync(storageNode, str);
-                if (fileInfo == null)
-                {
-                    Console.WriteLine($"GetFileInfoAsync Fail, path: {str}");
-                    return;
-                }
+                Console.WriteLine($"GetFileInfoAsync Fail, path: {filename}");
+                return;
             }
 
-            Console.WriteLine("FileName:{0}", str);
+            Console.WriteLine("FileName:{0}", filename);
             Console.WriteLine("FileSize:{0}", fileInfo.FileSize);
             Console.WriteLine("CreateTime:{0}", fileInfo.CreateTime);
             Console.WriteLine("Crc32:{0}", fileInfo.Crc32);
 
-            Console.WriteLine("Complete");
+            var appendBytes = testBytes.Skip((int) fileInfo.FileSize).ToArray();
+            await FastDFSClient.AppendFileAsync("group1", filename, appendBytes);
+
+            var test = await HttpClient.GetByteArrayAsync(StorageLink + filename);
+            if (Encoding.UTF8.GetString(test) == Encoding.UTF8.GetString(testBytes))
+            {
+                Console.WriteLine($"UploadAppendFile Success");
+            }
+            else
+            {
+                Console.WriteLine($"UploadAppendFile Fail : Bytes Diff ");
+            }
+            await FastDFSClient.RemoveFileAsync("group1", filename);
+
         }
     }
 }
