@@ -9,7 +9,8 @@
 ## Basic Usage
 see https://github.com/caozhiyuan/FastDFSNetCore/blob/master/src/FastDFS.Test/Program.cs
 
-## Nginx FastDFS ImageFilter Sample
+## Ngx_fastdfs_module
+
 
 ``` nginx
 server {
