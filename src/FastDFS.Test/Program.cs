@@ -49,6 +49,8 @@ namespace FastDFS.Test
 
                 UploadAppendFile().Wait();
 
+                DownLoadFile().Wait();
+
                 Console.ReadKey();
 
                 ParallelTest();
@@ -220,6 +222,27 @@ namespace FastDFS.Test
             }
             await FastDFSClient.RemoveFileAsync("group1", filename);
 
+        }
+
+        private static async Task DownLoadFile()
+        {
+            var testBytes = Encoding.UTF8.GetBytes("123456789");
+            StorageNode storageNode = await FastDFSClient.GetStorageNodeAsync("group1");
+            var filename = await FastDFSClient.UploadFileAsync(storageNode, testBytes, "txt");
+
+            var bytes = await FastDFSClient.DownloadFileAsync(storageNode, filename);
+            if (bytes == null)
+            {
+                Console.WriteLine($"DownLoadFile Fail : Bytes null ");
+            }
+            if (Encoding.UTF8.GetString(bytes) == Encoding.UTF8.GetString(testBytes))
+            {
+                Console.WriteLine($"DownLoadFile Success");
+            }
+            else
+            {
+                Console.WriteLine($"DownLoadFile Fail : Bytes Diff ");
+            }
         }
     }
 }

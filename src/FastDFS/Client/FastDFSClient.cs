@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -68,6 +69,19 @@ namespace FastDFS.Client
                     fileName,
                     contentByte)
                 .GetResponseAsync<APPEND_FILE.Response>();
+        }
+
+        public static async Task<byte[]> DownloadFileAsync(StorageNode storageNode, string fileName,
+            long offset = 0,
+            long length = 0)
+        {
+            var response = await DOWNLOAD_FILE.Instance
+                .GetRequest(storageNode,
+                    fileName,
+                    Tuple.Create(offset, length))
+                .GetResponseAsync<DOWNLOAD_FILE.Response>();
+
+            return response.Content;
         }
     }
 }

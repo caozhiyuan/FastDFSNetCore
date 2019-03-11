@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net451;netcoreapp2.1</TargetFrameworks>
-    <Version>1.1.9</Version>
+    <Version>1.2.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>FastDFSNetCore</PackageId>
-    <Description> fastdfs async client
+    <Description>
+      fastdfs async client
+      1.2.0: support download file
       1.1.9: support appenderfile
       1.1.7: 1. string zero memory copy 2. errorcode msg
       1.1.6: use span arraypool reduce gc
