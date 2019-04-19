@@ -20,6 +20,10 @@ namespace FastDFS.Client
 
             StorageNode storageNode = (StorageNode)paramList[0];
             string fileExt = (string)paramList[1];
+            if (fileExt[0] == '.')
+            {
+                fileExt = fileExt.Substring(1);
+            }
             byte[] contentByte = (byte[])paramList[2];
 
             int contentByteLength = contentByte.Length;
