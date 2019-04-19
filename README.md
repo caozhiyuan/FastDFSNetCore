@@ -1,5 +1,7 @@
 # FastDFSNetCore
 
+[![Build Status](https://dev.azure.com/q568022847/FastDFSNetCore/_apis/build/status/caozhiyuan.FastDFSNetCore?branchName=master)](https://dev.azure.com/q568022847/FastDFSNetCore/_build/latest?definitionId=5&branchName=master)
+
 ## Nuget Packages
 
 | Package | NuGet Stable | Downloads |
