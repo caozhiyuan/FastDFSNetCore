@@ -26,11 +26,11 @@ namespace FastDFS.Client
             set => this._pool = value;
         }
 
-        private readonly IPEndPoint _endPoint;
+        private readonly EndPoint _endPoint;
 
         private Socket Socket { get; set; }
 
-        public Connection(IPEndPoint endPoint)
+        public Connection(EndPoint endPoint)
         {
             _endPoint = endPoint;
         }

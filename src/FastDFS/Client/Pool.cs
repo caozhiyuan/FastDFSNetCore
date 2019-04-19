@@ -8,13 +8,13 @@ namespace FastDFS.Client
     internal class Pool
     {
         private readonly SemaphoreSlim _semaphoreSlim;
-        private readonly IPEndPoint _endPoint;
+        private readonly EndPoint _endPoint;
         private readonly Stack<Connection> _idle;
         private readonly List<Connection> _inUse;
         private readonly int _maxConnection;
         private readonly object _locker = new object();
 
-        public Pool(IPEndPoint endPoint, int maxConnection)
+        public Pool(EndPoint endPoint, int maxConnection)
         {
             this._semaphoreSlim = new SemaphoreSlim(maxConnection);
             this._inUse = new List<Connection>(maxConnection);
