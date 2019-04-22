@@ -14,10 +14,17 @@ namespace FastDFS.Client
                 .GetResponseAsync<FDFSFileInfo>();
         }
 
+        public static async Task<StorageNode> GetStorageNodeAsync()
+        {
+            return await GetStorageNodeAsync(null);
+        }
+
         public static async Task<StorageNode> GetStorageNodeAsync(string groupName)
         {
-            var response = await QUERY_STORE_WITH_GROUP_ONE.Instance.GetRequest(groupName)
-                .GetResponseAsync<QUERY_STORE_WITH_GROUP_ONE.Response>();
+            var request = string.IsNullOrWhiteSpace(groupName) ?
+                            QUERY_STORE_WITHOUT_GROUP_ONE.Instance.GetRequest()
+                            : QUERY_STORE_WITH_GROUP_ONE.Instance.GetRequest(groupName);
+            var response = await request.GetResponseAsync<QUERY_STORE_WITH_GROUP_ONE.Response>();
 
             var point = new IPEndPoint(IPAddress.Parse(response.IPStr), response.Port);
             return new StorageNode
@@ -43,7 +50,7 @@ namespace FastDFS.Client
         public static async Task<string> UploadFileAsync(StorageNode storageNode, byte[] contentByte, string fileExt)
         {
             var response = await UPLOAD_FILE.Instance.GetRequest(storageNode,
-                    fileExt, 
+                    fileExt,
                     contentByte)
                 .GetResponseAsync<UPLOAD_FILE.Response>();
             return response.FileName;
