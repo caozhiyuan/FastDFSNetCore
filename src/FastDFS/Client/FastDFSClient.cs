@@ -14,9 +14,9 @@ namespace FastDFS.Client
                 .GetResponseAsync<FDFSFileInfo>();
         }
 
-        public static async Task<StorageNode> GetStorageNodeAsync()
+        public static Task<StorageNode> GetStorageNodeAsync()
         {
-            return await GetStorageNodeAsync(null);
+            return GetStorageNodeAsync(null);
         }
 
         public static async Task<StorageNode> GetStorageNodeAsync(string groupName)

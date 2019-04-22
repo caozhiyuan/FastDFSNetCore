@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net451;netcoreapp2.1</TargetFrameworks>
-    <Version>1.2.1</Version>
+    <Version>1.2.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>FastDFSNetCore</PackageId>
     <Description>
       fastdfs async client
+      1.2.2: support QUERY_STORE_WITHOUT_GROUP_ONE
       1.2.1: compatible with DnsEndPoint and fileExt first char is a dot
       1.2.0: support download file
       1.1.9: support appenderfile
