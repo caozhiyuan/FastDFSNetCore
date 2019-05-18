@@ -34,6 +34,13 @@ namespace FastDFS.Client
             int length = 16 + fileNameByteCount;
             queryFileInfo.SetBodyBuffer(length);
             Util.StringToByte(groupName, queryFileInfo.BodyBuffer, 0, groupNameByteCount);
+            if (groupNameByteCount < 16)
+            {
+                for (var i = groupNameByteCount; i < 16; i++)
+                {
+                    queryFileInfo.BodyBuffer[i] = 0;
+                }
+            }
             Util.StringToByte(fileName, queryFileInfo.BodyBuffer, 16, fileNameByteCount);
             queryFileInfo.Header = new FDFSHeader(length, FDFSConstants.STORAGE_PROTO_CMD_QUERY_FILE_INFO, 0);
 			return queryFileInfo;

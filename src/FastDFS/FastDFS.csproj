@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net451;netcoreapp2.1</TargetFrameworks>
-    <Version>1.2.2</Version>
+    <Version>1.2.3</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>FastDFSNetCore</PackageId>
     <Description>
       fastdfs async client
+      1.2.3: support big file upload and download
       1.2.2: support QUERY_STORE_WITHOUT_GROUP_ONE
       1.2.1: compatible with DnsEndPoint and fileExt first char is a dot
       1.2.0: support download file
@@ -20,6 +21,10 @@
     <PackageProjectUrl>https://github.com/caozhiyuan/FastDFSNetCore</PackageProjectUrl>
     <PackageLicense>https://github.com/caozhiyuan/FastDFSNetCore/blob/master/LICENSE</PackageLicense>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Client\DOWNLOAD_FILE.cs~RF7a6df6f.TMP" />
+    <None Remove="Client\FastDFSClient.cs~RF7513d31.TMP" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.2" />

@@ -27,6 +27,13 @@ namespace FastDFS.Client
             const int length = 16;
             queryStoreWithGroupOne.SetBodyBuffer(length);
             Util.StringToByte(groupName, queryStoreWithGroupOne.BodyBuffer, 0, groupNameByteCount);
+            if (groupNameByteCount < 16)
+            {
+                for (var i = groupNameByteCount; i < 16; i++)
+                {
+                    queryStoreWithGroupOne.BodyBuffer[i] = 0;
+                }
+            }
             queryStoreWithGroupOne.Header = new FDFSHeader(length, FDFSConstants.TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITH_GROUP_ONE, 0);
 			return queryStoreWithGroupOne;
 		}

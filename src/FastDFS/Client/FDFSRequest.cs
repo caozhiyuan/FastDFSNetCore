@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -16,13 +17,17 @@ namespace FastDFS.Client
 
         protected FDFSConnectionType ConnectionType { get; set; }
 
-        private Connection _connection;
+        protected Connection _connection;
 
         protected IPEndPoint EndPoint { get; set; }
 
         protected FDFSHeader Header { get; set; }
 
         protected byte[] BodyBuffer { get; set; }
+
+        protected int BodyBufferLength { get; set; }
+
+        protected Stream BodyStream { get; set; }
 
         protected FDFSRequest()
         {
@@ -32,6 +37,7 @@ namespace FastDFS.Client
         protected void SetBodyBuffer(int length)
         {
             BodyBuffer = ArrayPool<byte>.Shared.Rent(length);
+            BodyBufferLength = length;
         }
 
         public virtual FDFSRequest GetRequest(params object[] paramList)
@@ -57,9 +63,14 @@ namespace FastDFS.Client
                 var buffers = new List<ArraySegment<byte>>(2)
                 {
                     headerBuffer,
-                    new ArraySegment<byte>(BodyBuffer, 0, (int) Header.Length)
+                    new ArraySegment<byte>(BodyBuffer, 0, BodyBufferLength)
                 };
                 await _connection.SendExAsync(buffers);
+
+                if (BodyStream != null)
+                {
+                    await _connection.SendExAsync(BodyStream);
+                }
                 
                 var responseHeader = await GetResponseHeaderInfo<T>(headerBuffer);
 
@@ -113,6 +124,11 @@ namespace FastDFS.Client
                 return default(T);
             }
 
+            return await ParseResponseInfo<T>(responseHeader);
+        }
+
+        protected virtual async Task<T> ParseResponseInfo<T>(FDFSHeader responseHeader) where T : IFDFSResponse, new()
+        {
             int resLen = (int) responseHeader.Length;
             var resBuffer = ArrayPool<byte>.Shared.Rent(resLen);
             try

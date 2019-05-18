@@ -1,18 +1,26 @@
 ﻿using System;
+using System.Buffers;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace FastDFS.Client
 {
     internal class DOWNLOAD_FILE : FDFSRequest
     {
+        private const int DEFAULT_BUFFER_SIZE = 1024 * 256;
+
+        public IDownloadCallback Callback { get; set; }
+
         public static readonly DOWNLOAD_FILE Instance = new DOWNLOAD_FILE();
 
         private DOWNLOAD_FILE()
         {
+
         }
 
         public override FDFSRequest GetRequest(params object[] paramList)
         {
-            if (paramList.Length != 3)
+            if (paramList.Length != 4)
                 throw new FDFSException("param count is wrong");
 
             var storageNode = (StorageNode)paramList[0];
@@ -22,7 +30,8 @@ namespace FastDFS.Client
             var downloadFile = new DOWNLOAD_FILE
             {
                 ConnectionType = FDFSConnectionType.StorageConnection,
-                EndPoint = storageNode.EndPoint
+                EndPoint = storageNode.EndPoint,
+                Callback = (IDownloadCallback) paramList[3]
             };
 
             var groupNameByteCount = Util.StringByteCount(storageNode.GroupName);
@@ -60,15 +69,57 @@ namespace FastDFS.Client
             return downloadFile;
         }
 
+        protected override async Task<T> ParseResponseInfo<T>(FDFSHeader responseHeader)
+        {
+            var buff = ArrayPool<byte>.Shared.Rent(DEFAULT_BUFFER_SIZE);
+            try
+            {
+                var remainBytes = responseHeader.Length;
+                while (remainBytes > 0)
+                {
+                    var bytes = await _connection.ReceiveExAsync(buff, remainBytes > buff.Length ? buff.Length : (int)remainBytes);
+                    int result;
+                    if ((result = await Callback.ReceiveAsync(responseHeader.Length, buff, bytes)) != 0)
+                    {
+                        throw new FDFSStatusException(responseHeader.Status, $"Callback Receive Error:{result}");
+                    }
+                    remainBytes -= bytes;
+                }             
+                return new T();
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buff);
+                responseHeader.Dispose();
+            }
+        }
+
         public class Response : IFDFSResponse
         {
-            public byte[] Content { get; set; }
-
             public void ParseBuffer(byte[] responseByte, int length)
             {
-                Content = new byte[length];
-                Array.Copy(responseByte, 0, Content, 0, length);
             }
+        }
+    }
+
+    public interface IDownloadCallback
+    {
+        Task<int> ReceiveAsync(long fileSize, byte[] data, int bytes);
+    }
+
+    public class StreamDownloadCallback : IDownloadCallback
+    {
+        private readonly Stream _stream;
+
+        public StreamDownloadCallback(Stream stream)
+        {
+            _stream = stream;
+        }
+
+        public async Task<int> ReceiveAsync(long fileSize, byte[] data, int bytes)
+        {
+            await _stream.WriteAsync(data, 0, bytes);
+            return 0;
         }
     }
 }

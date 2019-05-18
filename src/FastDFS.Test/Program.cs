@@ -14,14 +14,14 @@ namespace FastDFS.Test
 {
     internal class Program
     {
-        const string StorageLink = "http://192.168.238.128/group1/";
+        const string StorageLink = "http://192.168.197.128/group1/";
         private static readonly HttpClient HttpClient = new HttpClient();
 
         static void Main(string[] args)
         {
             List<IPEndPoint> pEndPoints = new List<IPEndPoint>()
             {
-                new IPEndPoint(IPAddress.Parse("192.168.238.128"), 22122)
+                new IPEndPoint(IPAddress.Parse("192.168.197.128"), 22122)
             };
             ConnectionManager.Initialize(pEndPoints);
 
@@ -54,6 +54,22 @@ namespace FastDFS.Test
                 Console.ReadKey();
 
                 ParallelTest();
+
+                Console.ReadKey();
+
+                sw.Start();
+
+                BigFileUploadDownLoad().Wait();
+
+                sw.Stop();
+                Console.WriteLine("BigFileUploadDownLoad 100M " + sw.ElapsedMilliseconds);
+
+                sw.Start();
+
+                BigFileAppendUploadDownLoad().Wait();
+
+                sw.Stop();
+                Console.WriteLine("BigFileAppendUploadDownLoad 100M " + sw.ElapsedMilliseconds);
 
                 Console.ReadKey();
             }
@@ -243,6 +259,58 @@ namespace FastDFS.Test
             {
                 Console.WriteLine($"DownLoadFile Fail : Bytes Diff ");
             }
+        }
+
+        protected static async Task BigFileUploadDownLoad()
+        {
+            var temp = Enumerable.Repeat((byte) 99, 1024 * 1024 * 100);
+            var testBytes = temp.ToArray();
+            StorageNode storageNode = await FastDFSClient.GetStorageNodeAsync("group1");
+
+            var filename = await FastDFSClient.UploadFileAsync(storageNode, testBytes, "txt");
+
+            using (var fileStream = File.OpenWrite("c:\\fastdfs_test.txt"))
+            {
+                await FastDFSClient.DownloadFileAsync(storageNode, filename, new StreamDownloadCallback(fileStream));
+            }
+
+            await FastDFSClient.RemoveFileAsync("group1", filename);
+
+            temp = null;
+            testBytes = null;
+        }
+
+        protected static async Task BigFileAppendUploadDownLoad()
+        {
+            var temp = Enumerable.Repeat((byte)99, 1024 * 1024 * 100);
+            var testBytes = temp.ToArray();
+            StorageNode storageNode = await FastDFSClient.GetStorageNodeAsync("group1");
+
+
+            var filename = await FastDFSClient.UploadAppenderFileAsync(storageNode, testBytes.Take(1024 * 1024 * 2).ToArray(), "txt");
+
+            for (int i = 0; i < 49; i++)
+            {
+                FDFSFileInfo fileInfo = await FastDFSClient.GetFileInfoAsync(storageNode, filename);
+                var appendBytes = testBytes.Skip((int)fileInfo.FileSize).Take(1024 * 1024 * 2).ToArray();
+                await FastDFSClient.AppendFileAsync("group1", filename, appendBytes);
+            }
+
+            using (var fileStream = File.OpenWrite("c:\\fastdfs_test.txt"))
+            {
+                for (int i = 0; i < 50; i++)
+                {
+                    var buffer = await FastDFSClient.DownloadFileAsync(storageNode, filename,
+                        1024 * 1024 * 2 * i,
+                        1024 * 1024 * 2);
+                    fileStream.Write(buffer, 0, buffer.Length);
+                }
+            }
+
+            await FastDFSClient.RemoveFileAsync("group1", filename);
+
+            temp = null;
+            testBytes = null;
         }
     }
 }

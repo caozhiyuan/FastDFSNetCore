@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net;
 
 namespace FastDFS.Client
@@ -24,9 +25,9 @@ namespace FastDFS.Client
             {
                 fileExt = fileExt.Substring(1);
             }
-            byte[] contentByte = (byte[]) paramList[2];
+            var contentStream = (Stream) paramList[2];
 
-            int contentByteLength = contentByte.Length;
+            var contentByteLength = contentStream.Length;
 
             UPLOAD_FILE uploadFile = new UPLOAD_FILE
             {
@@ -38,8 +39,8 @@ namespace FastDFS.Client
                 throw new FDFSException("file ext is too long");
             }
 
-            int length = 15 + contentByteLength;
-            uploadFile.SetBodyBuffer(length);
+            const int bodyBufferLen = 15;
+            uploadFile.SetBodyBuffer(bodyBufferLen);
 
             int offset = 0;
             uploadFile.BodyBuffer[offset++] = storageNode.StorePathIndex;
@@ -57,9 +58,9 @@ namespace FastDFS.Client
                 }
             }
 
-            offset += 6;
-            Array.Copy(contentByte, 0, uploadFile.BodyBuffer, offset, contentByte.Length);
+            uploadFile.BodyStream = contentStream;
 
+            long length = bodyBufferLen + contentStream.Length;
             uploadFile.Header = new FDFSHeader(length, FDFSConstants.STORAGE_PROTO_CMD_UPLOAD_FILE, 0);
             return uploadFile;
         }
