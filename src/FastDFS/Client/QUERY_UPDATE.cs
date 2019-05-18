@@ -29,6 +29,14 @@ namespace FastDFS.Client
             int length = 16 + fileNameByteCount;
             queryUpDate.SetBodyBuffer(length);
             Util.StringToByte(groupName, queryUpDate.BodyBuffer, 0, groupNameByteCount);
+            if (groupNameByteCount < 16)
+            {
+                for (var i = groupNameByteCount; i < 16; i++)
+                {
+                    queryUpDate.BodyBuffer[i] = 0;
+                }
+            }
+
             Util.StringToByte(fileName, queryUpDate.BodyBuffer, 16, fileNameByteCount);
             queryUpDate.Header = new FDFSHeader(length, FDFSConstants.TRACKER_PROTO_CMD_SERVICE_QUERY_UPDATE, 0);
 			return queryUpDate;

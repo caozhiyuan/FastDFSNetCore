@@ -79,5 +79,24 @@ namespace FastDFS.Client
             }, tcs);
             return tcs.Task;
         }
+
+        public static Task<int> SendExAsync(this Socket socket, byte[] buffer, int index, int size)
+        {
+            var tcs = new TaskCompletionSource<int>(socket);
+            socket.BeginSend(buffer, index, size, SocketFlags.None, iar =>
+            {
+                var innerTcs = (TaskCompletionSource<int>) iar.AsyncState;
+                try
+                {
+                    var sent = ((Socket) innerTcs.Task.AsyncState).EndSend(iar);
+                    innerTcs.TrySetResult(sent);
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
     }
 }
