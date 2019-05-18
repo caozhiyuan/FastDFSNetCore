@@ -21,10 +21,6 @@
     <PackageProjectUrl>https://github.com/caozhiyuan/FastDFSNetCore</PackageProjectUrl>
     <PackageLicense>https://github.com/caozhiyuan/FastDFSNetCore/blob/master/LICENSE</PackageLicense>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Client\DOWNLOAD_FILE.cs~RF7a6df6f.TMP" />
-    <None Remove="Client\FastDFSClient.cs~RF7513d31.TMP" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.2" />
