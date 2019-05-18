@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -47,48 +48,85 @@ namespace FastDFS.Client
                 .GetResponseAsync<EmptyFDFSResponse>();
         }
 
-        public static async Task<string> UploadFileAsync(StorageNode storageNode, byte[] contentByte, string fileExt)
+        public static async Task<string> UploadFileAsync(StorageNode storageNode, Stream contentStream, string fileExt)
         {
             var response = await UPLOAD_FILE.Instance.GetRequest(storageNode,
                     fileExt,
-                    contentByte)
+                    contentStream)
                 .GetResponseAsync<UPLOAD_FILE.Response>();
+            return response.FileName;
+        }
+
+        public static async Task<string> UploadFileAsync(StorageNode storageNode, byte[] contentByte, string fileExt)
+        {
+            using (var contentStream = new MemoryStream(contentByte, false))
+            {
+                return await UploadFileAsync(storageNode, contentStream, fileExt);
+            }
+        }
+
+        public static async Task<string> UploadAppenderFileAsync(StorageNode storageNode, Stream contentStream, string fileExt)
+        {
+            var response = await UPLOAD_APPEND_FILE.Instance.GetRequest(storageNode,
+                    fileExt,
+                    contentStream)
+                .GetResponseAsync<UPLOAD_APPEND_FILE.Response>();
             return response.FileName;
         }
 
         public static async Task<string> UploadAppenderFileAsync(StorageNode storageNode, byte[] contentByte, string fileExt)
         {
-            var response = await UPLOAD_APPEND_FILE.Instance.GetRequest(storageNode,
-                    fileExt,
-                    contentByte)
-                .GetResponseAsync<UPLOAD_APPEND_FILE.Response>();
-            return response.FileName;
+            using (var contentStream = new MemoryStream(contentByte, false))
+            {            
+                return await UploadAppenderFileAsync(storageNode,contentStream,fileExt);
+            }
         }
 
-        public static async Task AppendFileAsync(string groupName, string fileName, byte[] contentByte)
+        public static async Task AppendFileAsync(string groupName, string fileName, Stream contentStream)
         {
             var response = await QUERY_UPDATE.Instance
                 .GetRequest(groupName, fileName)
                 .GetResponseAsync<QUERY_UPDATE.Response>();
 
             var point = new IPEndPoint(IPAddress.Parse(response.IPStr), response.Port);
+
             await APPEND_FILE.Instance.GetRequest(point,
                     fileName,
-                    contentByte)
+                    contentStream)
                 .GetResponseAsync<APPEND_FILE.Response>();
+        }
+
+        public static async Task AppendFileAsync(string groupName, string fileName, byte[] contentByte)
+        {
+            using (var contentStream = new MemoryStream(contentByte, false))
+            {
+                await AppendFileAsync(groupName, fileName, contentStream);
+            }
         }
 
         public static async Task<byte[]> DownloadFileAsync(StorageNode storageNode, string fileName,
             long offset = 0,
             long length = 0)
         {
-            var response = await DOWNLOAD_FILE.Instance
+            using (var memoryStream = new MemoryStream(length > 0 ? (int) length : 0))
+            {
+                var downloadStream = new StreamDownloadCallback(memoryStream);
+                await DownloadFileAsync(storageNode, fileName, downloadStream, offset, length);
+                return memoryStream.GetBuffer();
+            }
+        }
+
+        public static async Task DownloadFileAsync(StorageNode storageNode, string fileName,
+            IDownloadCallback downloadCallback,
+            long offset = 0,
+            long length = 0)
+        {
+            await DOWNLOAD_FILE.Instance
                 .GetRequest(storageNode,
                     fileName,
-                    Tuple.Create(offset, length))
+                    Tuple.Create(offset, length),
+                    downloadCallback)
                 .GetResponseAsync<DOWNLOAD_FILE.Response>();
-
-            return response.Content;
         }
     }
 }

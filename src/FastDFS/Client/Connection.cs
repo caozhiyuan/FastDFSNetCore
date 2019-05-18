@@ -1,5 +1,7 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -8,6 +10,8 @@ namespace FastDFS.Client
 {
     internal class Connection
     {
+        private const int DEFAULT_BUFFER_SIZE = 1024 * 64;
+
         private Pool _pool;
 
         private DateTime _lastUseTime;
@@ -85,6 +89,28 @@ namespace FastDFS.Client
             {
                 await CloseSocketAsync();
                 throw;
+            }
+        }
+
+        internal async Task SendExAsync(Stream stream)
+        {
+            var buffer = ArrayPool<byte>.Shared.Rent(DEFAULT_BUFFER_SIZE);
+            try
+            {
+                int read;
+                while ((read = await stream.ReadAsync(buffer, 0, buffer.Length)) != 0)
+                {
+                    await Socket.SendExAsync(buffer, 0, read);
+                }
+            }
+            catch (Exception)
+            {
+                await CloseSocketAsync();
+                throw;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 

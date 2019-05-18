@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 
 namespace FastDFS.Client
@@ -15,10 +16,11 @@ namespace FastDFS.Client
         {
             if (paramList.Length != 3)
                 throw new FDFSException("param count is wrong");
+
             var endPoint = (IPEndPoint) paramList[0];
 
             var fileName = (string) paramList[1];
-            byte[] contentByte = (byte[]) paramList[2];
+            var contentStream = (Stream) paramList[2];
 
             var appendFile = new APPEND_FILE
             {
@@ -27,22 +29,22 @@ namespace FastDFS.Client
             };
 
             var fileNameByteCount = Util.StringByteCount(fileName);
-            int length = 16 + fileNameByteCount + contentByte.Length;
-            appendFile.SetBodyBuffer(length);
+            int bodyBufferLen = 16 + fileNameByteCount;
+            appendFile.SetBodyBuffer(bodyBufferLen);
 
             int offset = 0;
 
             Util.LongToBuffer(fileNameByteCount, appendFile.BodyBuffer, offset);
             offset += 8;
 
-            Util.LongToBuffer(contentByte.Length, appendFile.BodyBuffer, offset);
+            Util.LongToBuffer(contentStream.Length, appendFile.BodyBuffer, offset);
             offset += 8;
 
             Util.StringToByte(fileName, appendFile.BodyBuffer, offset, fileNameByteCount);
-            offset += fileNameByteCount;
 
-            Array.Copy(contentByte, 0, appendFile.BodyBuffer, offset, contentByte.Length);
+            appendFile.BodyStream = contentStream;
 
+            long length = bodyBufferLen + contentStream.Length;
             appendFile.Header = new FDFSHeader(length, FDFSConstants.STORAGE_PROTO_CMD_APPEND_FILE, 0);
             return appendFile;
         }
