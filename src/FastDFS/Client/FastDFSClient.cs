@@ -112,7 +112,7 @@ namespace FastDFS.Client
             {
                 var downloadStream = new StreamDownloadCallback(memoryStream);
                 await DownloadFileAsync(storageNode, fileName, downloadStream, offset, length);
-                return memoryStream.GetBuffer();
+                return memoryStream.ToArray();
             }
         }
 

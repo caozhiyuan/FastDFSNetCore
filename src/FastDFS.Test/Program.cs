@@ -234,7 +234,7 @@ namespace FastDFS.Test
             }
             else
             {
-                Console.WriteLine($"UploadAppendFile Fail : Bytes Diff ");
+                throw new ApplicationException(($"UploadAppendFile Fail : Bytes Diff ");
             }
             await FastDFSClient.RemoveFileAsync("group1", filename);
 
@@ -242,7 +242,7 @@ namespace FastDFS.Test
 
         private static async Task DownLoadFile()
         {
-            var testBytes = Encoding.UTF8.GetBytes("123456789");
+            var testBytes = Encoding.UTF8.GetBytes("12345678911118888888888888888881111111111");
             StorageNode storageNode = await FastDFSClient.GetStorageNodeAsync("group1");
             var filename = await FastDFSClient.UploadFileAsync(storageNode, testBytes, "txt");
 
@@ -257,7 +257,7 @@ namespace FastDFS.Test
             }
             else
             {
-                Console.WriteLine($"DownLoadFile Fail : Bytes Diff ");
+               throw new ApplicationException("DownLoadFile Fail : Bytes Diff");
             }
         }
 
