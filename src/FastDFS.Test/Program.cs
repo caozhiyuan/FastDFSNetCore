@@ -234,7 +234,7 @@ namespace FastDFS.Test
             }
             else
             {
-                throw new ApplicationException(($"UploadAppendFile Fail : Bytes Diff ");
+                throw new ApplicationException($"UploadAppendFile Fail : Bytes Diff ");
             }
             await FastDFSClient.RemoveFileAsync("group1", filename);
 
