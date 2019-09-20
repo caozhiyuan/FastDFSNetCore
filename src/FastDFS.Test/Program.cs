@@ -211,7 +211,7 @@ namespace FastDFS.Test
         {
             var testBytes = Encoding.UTF8.GetBytes("123456789");
             StorageNode storageNode = await FastDFSClient.GetStorageNodeAsync("group1");
-            var filename = await FastDFSClient.UploadAppenderFileAsync(storageNode, testBytes.Take(6).ToArray(), "txt");
+            var filename = await FastDFSClient.UploadAppenderFileAsync(storageNode, testBytes.Take(6).ToArray(), "");
             FDFSFileInfo fileInfo = await FastDFSClient.GetFileInfoAsync(storageNode, filename);
             if (fileInfo == null)
             {
