@@ -5,7 +5,7 @@ trigger:
 jobs:
 - job: Windows
   pool:
-    vmImage: 'vs2019'
+    vmImage: 'windows-2019'
   steps:
   - script: |
       dotnet build -c Release
